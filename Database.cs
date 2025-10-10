@@ -30,11 +30,16 @@ namespace TestSynchronizer {
         [MaxLength(255)]
         public string TestName { get; set; }
         public int Workers { get; set; }
+        public int CpuCores { get; set; }
+        public int Memory { get; set; }
+        public string Label { get; set; }
         public ICollection<TestOperation> Operations { get; set; } = new ObservableCollection<TestOperation>();
 
         public override string ToString() {
             string name = TestName.Replace("MainDemo.NET.EFCore.LoadTests.MainDemoLoadTests.", "");
-            return $"{TestDate.ToString("dd.MM HH:mm")} {name}, {Workers} workers";
+            string label = string.IsNullOrEmpty(Label) ? "" : $" [{Label}]";
+            string cpuAndMemory = CpuCores != 0 ? $", {CpuCores}CPU/{Memory / 1024.0}Gb" : "";
+            return $"{TestDate.ToString("dd.MM HH:mm")}{label} {name}, {Workers} workers, {cpuAndMemory}";
         }
     }
 
