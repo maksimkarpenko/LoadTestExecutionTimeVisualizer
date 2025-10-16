@@ -40,7 +40,7 @@ namespace TestSynchronizer {
         public override string ToString() {
             string name = TestName.Replace("MainDemo.NET.EFCore.LoadTests.MainDemoLoadTests.", "");
             string label = string.IsNullOrEmpty(Label) ? "" : $" [{Label}]";
-            string cpuAndMemory = CpuCores != 0 ? $"{CpuCores}CPU/{Memory / 1024.0}Gb" : "";
+            string cpuAndMemory = CpuCores != 0 ? $"{CpuCores}CPU/{Memory}Gb" : "";
             return $"{TestDate.ToString("dd.MM HH:mm")}{label} {name}, {Workers} workers, {cpuAndMemory}";
         }
     }
