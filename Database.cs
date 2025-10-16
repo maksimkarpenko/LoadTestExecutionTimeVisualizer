@@ -5,17 +5,19 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace TestSynchronizer {
 
     class DataContext : DbContext {
 
-        const string ConnectionString = "Data Source=xaf-tests.corp.devexpress.com;Initial Catalog=LoadTests;Integrated Security=False;User=sa;Password=dx;Encrypt=False;";
         public DbSet<Test> Test { get; set; }
         public DbSet<TestOperation> TestOperation { get; set; }
+        readonly string connectionString;
+        public DataContext(string connectionStringName) {
+            connectionString = System.Configuration.ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
+        }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-            optionsBuilder.UseSqlServer(ConnectionString);
+            optionsBuilder.UseSqlServer(connectionString);
             base.OnConfiguring(optionsBuilder);
         }
     }
@@ -52,15 +54,19 @@ namespace TestSynchronizer {
         public double ExecutionTime { get; set; }
     }
 
-    static class DatabaseHelper {
+    class DatabaseHelper {
         public const string Version = "25.2";
-        public static List<Test> GetTests() {
-            using (var dbContext = new DataContext()) {
+        readonly string connectionStringName;
+        public DatabaseHelper(string connectionStringName) {
+            this.connectionStringName = connectionStringName;
+        }
+        public List<Test> GetTests() {
+            using (var dbContext = new DataContext(connectionStringName)) {
                 return dbContext.Test.Where(t => t.Version == Version).OrderBy(t => t.TestDate).ToList();
             }
         }
-        public static void DeleteTest(int testId) {
-            using (var dbContext = new DataContext()) {
+        public void DeleteTest(int testId) {
+            using (var dbContext = new DataContext(connectionStringName)) {
                 var test = dbContext.Test.FirstOrDefault(t => t.Id == testId);
                 var operations = dbContext.TestOperation.Where(t => t.Test.Id == testId).ToList();
                 dbContext.Test.Remove(test);
@@ -70,8 +76,8 @@ namespace TestSynchronizer {
                 dbContext.SaveChanges();
             }
         }
-        public static List<TestExecutionTimeMetric> GetTestOperations(int testId) {
-            using (var dbContext = new DataContext()) {
+        public List<TestExecutionTimeMetric> GetTestOperations(int testId) {
+            using (var dbContext = new DataContext(connectionStringName)) {
                 return dbContext.TestOperation.Where(t => t.Test.Id == testId).Select(t => new TestExecutionTimeMetric() {
                     Test = t.Test,
                     Operation = t.Operation,
@@ -79,8 +85,8 @@ namespace TestSynchronizer {
                 }).Distinct().OrderBy(t => t.StepNumber).ToList();
             }
         }
-        public static double[] GetTestExecutionTime(TestExecutionTimeMetric metric) {
-            using (var dbContext = new DataContext()) {
+        public double[] GetTestExecutionTime(TestExecutionTimeMetric metric) {
+            using (var dbContext = new DataContext(connectionStringName)) {
                 return dbContext.TestOperation.Where(t => t.Test.Id == metric.Test.Id && t.StepNumber == metric.StepNumber && t.Operation == metric.Operation)
                     .Select(t => t.ExecutionTime)
                     .OrderBy(t => t).ToArray();

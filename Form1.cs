@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Internal;
 using System;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,7 +18,18 @@ namespace TestExecutionTimeVisualizer {
             legendLabels[1] = lblLegend2;
             legendLabels[2] = lblLegend3;
             ClearChart();
+            foreach (ConnectionStringSettings conn in System.Configuration.ConfigurationManager.ConnectionStrings) {
+                ddlDatabase.Items.Add(conn.Name);
+            }
+            ddlDatabase.SelectedItem = "XafTests2";
             RefreshDirectoryTree();
+        }
+
+        DatabaseHelper DatabaseHelper {
+            get {
+                if(ddlDatabase.SelectedItem == null) throw new Exception("Select database first");
+                return new DatabaseHelper(ddlDatabase.SelectedItem.ToString());
+            }
         }
 
         void Execute(Action action) {
@@ -149,6 +161,10 @@ namespace TestExecutionTimeVisualizer {
         }
 
         private void btnRefresh_Click(object sender, EventArgs e) {
+            RefreshDirectoryTree();
+        }
+
+        private void ddlDatabase_SelectedIndexChanged(object sender, EventArgs e) {
             RefreshDirectoryTree();
         }
     }
